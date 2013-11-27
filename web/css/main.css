@@ -1,0 +1,50 @@
+body {
+    padding-top: 65px;
+}
+img.logo {
+    height: 135px;
+    width: 240px;
+    max-width: 240px;
+    margin-left: -50px;
+    margin-top: 5px;
+}
+.selected {
+    font-size: 14pt;
+    margin-top: -1px;
+    margin-left: -1px;
+}
+.container.visualizers {
+    padding-top: 30px;
+    margin-left: 200px;
+}
+.visualizers .tab-content {
+    margin-left: -114px;
+    margin-top: -21px;
+}
+ul.nav.nav-tabs, ul.nav.nav-pills {
+    min-width: 114px;
+}
+
+.visualizers .tab-content {
+    overflow: visible;
+}
+
+div.solution {
+    padding: 10px;
+    margin-top: 50px;
+    float: left;
+    width: 1130px;
+}
+
+.solution textarea {
+    width: 99%;
+    height: 100px;
+    vertical-align: top;
+}
+
+.solution button {
+    width: 160px;
+    height: 40px;
+    float: right;
+    margin: 5px 1px 0 9px;
+}
