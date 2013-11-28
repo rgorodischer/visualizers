@@ -1,6 +1,8 @@
-*.class
+# Intellij
+.idea/
+out/
+*.iml
+*.iws
 
-# Package Files #
-*.jar
-*.war
-*.ear
+# Jar files which should not be ignored
+!jstl-1.2.jar
