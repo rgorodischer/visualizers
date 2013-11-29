@@ -51,7 +51,7 @@
 
 <div id="visualizers" class="container visualizers">
 <div class="tabbable">
-<ul id="problemsets" class="nav nav-pills">
+<ul id="problemsets" class="nav nav-tabs">
     <li class="active"><a href="#tsp_tab" data-toggle="tab">Traveling Salesman Problem</a></li>
     <li><a href="#vrp_tab" data-toggle="tab">Vehicle Routing Problem</a></li>
     <li class="disabled"><a href="#wlp_tab" data-toggle="tab">Warehouse Location Problem</a></li>
