@@ -15,7 +15,7 @@ function _generateProblemsList() {
     _loadJsonFile(indexPath, function(problemsList) {
         var problemsContainer = $('div.tab-pane.active ul');
         $.each(problemsList, function(index, problem) {
-            problemsContainer.append("<li><a href='#" + problem + "' data-toggle='tab'>" + problem + "</a></li>")
+            problemsContainer.append("<li><a href='#" + problem + "'>" + problem + "</a></li>")
         });
         $('li', problemsContainer).first().addClass('active');
         _loadDefaultProblemOnActiveTab();
