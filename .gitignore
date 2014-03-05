@@ -4,5 +4,8 @@ out/
 *.iml
 *.iws
 
+# Excluded due to Coursera license limitations
+data-converters/src/main/resources/raw-problems/
+
 # Jar files which should not be ignored
 !jstl-1.2.jar

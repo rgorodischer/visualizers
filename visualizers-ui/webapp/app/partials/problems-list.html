@@ -1,0 +1,10 @@
+<div id="problems-filter">
+    <input type="search" class="form-control" placeholder="Search.." ng-model="problemFilter">
+</div>
+<div id="problems-set">
+    <ul>
+        <li ng-repeat="problem in problems | filter:problemFilter">
+            <a href="#/{{problemType}}/{{problem}}">{{problem}}</a>
+        </li>
+    </ul>
+</div>

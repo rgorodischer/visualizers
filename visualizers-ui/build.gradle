@@ -1,0 +1,12 @@
+apply plugin: 'war'
+
+dependencies {  
+    providedCompile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
+    providedCompile "javax.servlet.jsp:jsp-api:2.1"
+    providedCompile "javax.el:el-api:1.0"
+    compile "javax.servlet.jsp.jstl:jstl-api:1.2"
+}
+
+war {
+    from 'webapp'
+}

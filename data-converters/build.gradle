@@ -1,0 +1,66 @@
+apply plugin: 'groovy'
+
+dependencies {
+    compile "org.codehaus.groovy:groovy-all:2.2.0"
+    runtime "commons-cli:commons-cli:1.2"
+}
+
+prop = { name -> this[name] }
+
+task cleanTsp(type:Delete) {
+    delete fileTree(prop('files.converted.tsp'))
+}
+
+task cleanVrp(type:Delete) {
+    delete fileTree(prop('files.converted.vrp'))
+}
+
+task convertTsp(dependsOn: ['build', 'cleanTsp'], type: JavaExec) {
+    main = 'org.coursera.optimization.visualizers.data.DataConverters'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['convertTsp', prop('files.raw.tsp'), prop('files.converted.tsp')]
+}
+
+task convertVrp(dependsOn: ['build', 'cleanVrp'], type: JavaExec) {
+    main = 'org.coursera.optimization.visualizers.data.DataConverters'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['convertVrp', prop('files.raw.vrp'), prop('files.converted.vrp')]
+}
+
+task indexTsp(dependsOn: convertTsp, type: JavaExec) {
+    main = 'org.coursera.optimization.visualizers.data.DataConverters'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['indexTsp', prop('files.converted.tsp'), prop('files.converted.tsp')]
+}
+
+task indexVrp(dependsOn: convertVrp, type: JavaExec) {
+    main = 'org.coursera.optimization.visualizers.data.DataConverters'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['indexVrp', prop('files.converted.vrp'), prop('files.converted.vrp')]
+}
+
+task convertAll(dependsOn: ['indexTsp', 'indexVrp']) {
+    description = 'Convert TSPs and VRPs and generate indexes for both.'
+}
+
+task cleanWebappTsp(type:Delete) {
+    delete fileTree(prop('webapp.data.tsp'))
+}
+
+task cleanWebappVrp(type:Delete) {
+    delete fileTree(prop('webapp.data.vrp'))
+}
+
+task localCopyTsp(dependsOn: cleanWebappTsp, type: Copy) {
+    from prop('files.converted.tsp')
+    into prop('webapp.data.tsp')
+}
+
+task localCopyVrp(dependsOn: cleanWebappVrp, type: Copy) {
+    from prop('files.converted.vrp')
+    into prop('webapp.data.vrp')
+}
+
+task localCopyAll(dependsOn: ['localCopyTsp', 'localCopyVrp']) {
+    description = 'Copy converted TSPs and VRPs to webapp data folders.'
+}

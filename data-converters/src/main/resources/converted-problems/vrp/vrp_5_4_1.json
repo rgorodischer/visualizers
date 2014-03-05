@@ -1,0 +1,1 @@
+{"warehouse":{"y":0.0,"x":0.0},"capacity":10,"customers":[{"demand":3,"id":0,"y":10.0,"x":0.0},{"demand":3,"id":1,"y":10.0,"x":-10.0},{"demand":3,"id":2,"y":-10.0,"x":0.0},{"demand":3,"id":3,"y":-10.0,"x":10.0}],"vehicles":4}

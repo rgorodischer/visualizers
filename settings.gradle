@@ -1,0 +1,6 @@
+rootProject.name='visualizers'
+include 'visualizers-ui'
+include 'data-converters'
+
+project(':visualizers-ui').projectDir = file('./visualizers-ui')
+project(':data-converters').projectDir = file('./data-converters')
