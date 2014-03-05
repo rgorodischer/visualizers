@@ -5,13 +5,13 @@ dependencies {
     runtime "commons-cli:commons-cli:1.2"
 }
 
-prop = { name -> this[name] }
+project.ext.prop = { name -> this[name] }
 
-task cleanTsp(type:Delete) {
+task cleanTsp(type: Delete) {
     delete fileTree(prop('files.converted.tsp'))
 }
 
-task cleanVrp(type:Delete) {
+task cleanVrp(type: Delete) {
     delete fileTree(prop('files.converted.vrp'))
 }
 
@@ -43,11 +43,11 @@ task convertAll(dependsOn: ['indexTsp', 'indexVrp']) {
     description = 'Convert TSPs and VRPs and generate indexes for both.'
 }
 
-task cleanWebappTsp(type:Delete) {
+task cleanWebappTsp(type: Delete) {
     delete fileTree(prop('webapp.data.tsp'))
 }
 
-task cleanWebappVrp(type:Delete) {
+task cleanWebappVrp(type: Delete) {
     delete fileTree(prop('webapp.data.vrp'))
 }
 

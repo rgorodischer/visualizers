@@ -6,7 +6,7 @@ import groovy.json.JsonBuilder
 /**
  * Creates converted files index in JSON format.
  * Index is an array of Indexer.Entry instances.
- * Each entry contains corresponding file name and computed file description.
+ * Each entry contains converted file name and computed file description.
  *
  * Entries are sorted by numerical part in 'fileName' field.
  *
