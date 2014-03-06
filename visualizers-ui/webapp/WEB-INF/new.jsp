@@ -22,29 +22,27 @@
 <body>
 
 <div class="container">
-    <div id="heading" class="row">
-        <div class="col-xs-2">
+    <div id="heading" class="row jumbotron">
+        <div class="col-xs-3">
             <a href="https://class.coursera.org/optimization-001/" target="_blank">
-                <img id="logo" src="app/img/DiscreteOptimizationLogo.png" alt="">
+                <img id="logo" src="app/img/logo-darkblue.png" alt="">
             </a>
         </div>
-        <div id="description" class="col-xs-10">
+        <div id="description" class="col-xs-9">
             <h1>Visualizers</h1>
-            <h4>for Discrete Optimization course on Coursera</h4>
-            <p>Visualize your solutions and share your results.
-            <br>Select a problem, choose a data set and submit your solution.</p>
+            <p>for Discrete Optimization course on Coursera</p>
         </div>
     </div>
 
     <div id="problem-type-trigger" class="row">
-        <div class="btn-group btn-group-lg col-xs-offset-2">
+        <div class="btn-group btn-group-lg col-xs-offset-3">
             <button type="button" class="btn btn-default" ng-class="{active:problemType=='tsp'}" ng-click="goTo('/tsp')">Traveling Salesman Problem</button>
             <button type="button" class="btn btn-default" ng-class="{active:problemType=='vrp'}" ng-click="goTo('/vrp')">Vehicle Routing Problem</button>
         </div>
     </div>
 
     <div id="problem-visualization" class="row">
-        <div id="problems-nav" class="col-xs-2">
+        <div id="problems-nav" class="col-xs-3">
             <div ng-view></div>
         </div>
     </div>
@@ -83,7 +81,6 @@
     <script src="app/lib/d3.v3.js" charset="utf-8"></script>
 </c:if>
 
-<script src="app/lib/ICanHaz.js"></script>
 <script src="app/js/common.js"></script>
 <script src="app/js/problems.js"></script>
 <script src="app/js/visualizers.js"></script>

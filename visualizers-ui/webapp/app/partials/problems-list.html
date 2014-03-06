@@ -4,7 +4,10 @@
 <div id="problems-set">
     <ul>
         <li ng-repeat="problem in problems | filter:problemFilter">
-            <a href="#/{{problemType}}/{{problem}}">{{problem}}</a>
+            <a href="#/{{problemType}}/{{problem.fileName}}" class="problem-ref">
+                <span class="problem-desc">{{problem.description}}</span>
+                <span class="file-ref">({{problem.fileName}})</span>
+            </a>
         </li>
     </ul>
 </div>
