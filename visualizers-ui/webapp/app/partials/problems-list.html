@@ -1,13 +1,29 @@
-<div id="problems-filter">
-    <input type="search" class="form-control" placeholder="Search.." ng-model="problemFilter">
+<div id="problem-type-trigger" class="row">
+    <div class="btn-group btn-group-lg col-xs-offset-3">
+        <button type="button" class="btn btn-default" ng-class="{active:problems.type=='tsp'}" ng-click="goTo('/tsp')">
+            Traveling Salesman Problem
+        </button>
+        <button type="button" class="btn btn-default" ng-class="{active:problems.type=='vrp'}" ng-click="goTo('/vrp')">
+            Vehicle Routing Problem
+        </button>
+    </div>
 </div>
-<div id="problems-set">
-    <ul>
-        <li ng-repeat="problem in problems | filter:problemFilter">
-            <a href="#/{{problemType}}/{{problem.fileName}}" class="problem-ref">
-                <span class="problem-desc">{{problem.description}}</span>
-                <span class="file-ref">({{problem.fileName}})</span>
-            </a>
-        </li>
-    </ul>
+
+<div id="problem-visualization" class="row">
+    <div id="problems-nav" class="col-xs-3">
+        <div id="problems-filter">
+            <input type="search" class="form-control" placeholder="Search.." ng-model="problemFilter">
+        </div>
+        <div id="problems-set">
+            <ul>
+                <li ng-repeat="problemInfo in problems.index | filter:problemFilter">
+                    <a href="#/{{problems.type}}/{{problemInfo.fileName}}" class="problem-ref">
+                        <span class="problem-desc">{{problemInfo.description}}</span>
+                        <span class="file-ref">({{problemInfo.fileName}})</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>
+

@@ -34,35 +34,8 @@
         </div>
     </div>
 
-    <div id="problem-type-trigger" class="row">
-        <div class="btn-group btn-group-lg col-xs-offset-3">
-            <button type="button" class="btn btn-default" ng-class="{active:problemType=='tsp'}" ng-click="goTo('/tsp')">Traveling Salesman Problem</button>
-            <button type="button" class="btn btn-default" ng-class="{active:problemType=='vrp'}" ng-click="goTo('/vrp')">Vehicle Routing Problem</button>
-        </div>
-    </div>
+    <div ng-view></div>
 
-    <div id="problem-visualization" class="row">
-        <div id="problems-nav" class="col-xs-3">
-            <div ng-view></div>
-        </div>
-    </div>
-
-        <%--<div class="tabbable">--%>
-            <%--<div class="tab-content">--%>
-                <%--<div class="tab-pane active" id="tsp_tab">--%>
-                    <%--<div class="tabbable tabs-left">--%>
-                        <%--<ul class="nav nav-tabs"></ul>--%>
-                        <%--<div id="tsp_visualization" class="visualization-container"></div>--%>
-                    <%--</div>--%>
-                <%--</div>--%>
-                <%--<div class="tab-pane" id="vrp_tab">--%>
-                    <%--<div class="tabbable tabs-left">--%>
-                        <%--<ul class="nav nav-tabs"></ul>--%>
-                        <%--<div id="vrp_visualization" class="visualization-container"></div>--%>
-                    <%--</div>--%>
-                <%--</div>--%>
-            <%--</div>--%>
-        <%--</div>--%>
 </div>
 
 

@@ -1,58 +1,3 @@
-$(document).ready(function() {
-//    _bindProblemSetSelectEvents();
-    _generateProblemsList();
-//    _bindProblemSelectEvents();
-});
-
-//function _loadDefaultProblemOnActiveTab() {
-//    var selectedProblem = $('div.tab-pane.active li.active a').filter(":visible");
-//    _loadProblemByLink(selectedProblem);
-//}
-
-function _generateProblemsList() {
-    var problemType = "tsp";//_getOpenProblemType();
-    var indexPath = _getFullFilePath("index.json", problemType);
-    _loadJsonFile(indexPath, function(problemsList) {
-        var problemsContainer = $('#problems_set ul');
-        $.each(problemsList, function(index, problem) {
-            problemsContainer.append("<li><a href='#" + problem + "'>" + problem + "</a></li>")
-        });
-        $('li', problemsContainer).first().addClass('active');
-//        _loadDefaultProblemOnActiveTab();
-    })
-}
-
-function _bindProblemSetSelectEvents() {
-    $('#problemsets').on('shown', function() {
-        if (!$('div.tab-pane.active ul li').size()) {
-            _generateProblemsList();
-        }
-    });
-}
-
-function _bindProblemSelectEvents() {
-    $('#tsp_tab, #vrp_tab, #wlp_tab').on('click', 'a', function() {
-        _loadProblemByLink($(this))
-    });
-}
-
-function _loadProblemByLink(link) {
-    var fileName = _jsonFileNameFromLink(link);
-    var problemType = _getOpenProblemType();
-    var fullPath = _getFullFilePath(fileName, problemType);
-    _loadJsonFile(fullPath, _selectVisualizer(fileName));
-}
-
-function _getOpenProblemType() {
-    var problemTabId = $('div.tab-pane.active').attr('id');
-    return problemTabId.startsWith('tsp') ? "tsp"
-         : problemTabId.startsWith('vrp') ? "vrp"
-         : undefined;
-}
-
-function _jsonFileNameFromLink(link) {
-    return link.attr('href').substring(1) + ".json"
-}
 
 function _getFullFilePath(fileName, problemType) {
     switch (problemType) {
@@ -86,16 +31,39 @@ angular.module("problemSets", ["ngRoute"])
             $location.path(url);
         };
     })
-    .controller("TspController", function($scope, $rootScope, $http, $routeParams) {
-        $http.get("data/tsp/index.json").success(function(data) {
-            $scope.problems = data;
-            $rootScope.problemType = "tsp";
-        });
+    .service("ProblemsLoader", function($http) {
+        var problemsData = {
+            type : '',
+            index : [],
+            current : {}
+        };
+        return {
+            problems : problemsData,
+            loadProblem : function(problemType, problemId, redirect) {
+                problemsData.type = problemType;
+                $http.get("data/" + problemType + "/index.json", {cache : true}).success(function(index) {
+                    problemsData.index = index;
+                    if (!problemId) {
+                        redirect(index[0].fileName)
+                    } else {
+                        $http.get("data/" + problemType + "/" + problemId + ".json", {cache : true}).success(function(problem) {
+                            problemsData.current = problem
+                        })
+                    }
+                })
+            }
+        }
     })
-    .controller("VrpController", function($scope, $rootScope, $http, $routeParams) {
-        $http.get("data/vrp/index.json").success(function(data) {
-            $scope.problems = data;
-            $rootScope.problemType = "vrp";
+    .controller("TspController", function($scope, $routeParams, $location, ProblemsLoader) {
+        ProblemsLoader.loadProblem("tsp", $routeParams.problemId, function(problemId) {
+            $location.path("/tsp/" + problemId)
         });
+        $scope.problems = ProblemsLoader.problems
+    })
+    .controller("VrpController", function($scope, $routeParams, $location, ProblemsLoader) {
+        ProblemsLoader.loadProblem("vrp", $routeParams.problemId, function(problemId) {
+            $location.path("/vrp/" + problemId)
+        });
+        $scope.problems = ProblemsLoader.problems
     });
 
