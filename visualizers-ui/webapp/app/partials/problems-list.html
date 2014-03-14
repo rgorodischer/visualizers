@@ -18,12 +18,12 @@
             <ul>
                 <li ng-repeat="problemInfo in problems.index | filter:problemFilter">
                     <a href="#/{{problems.type}}/{{problemInfo.fileName}}" class="problem-ref">
-                        <span class="problem-desc">{{problemInfo.description}}</span>
-                        <span class="file-ref">({{problemInfo.fileName}})</span>
+                        <span class="problem-desc">{{problemInfo.description}}</span><span class="file-ref"> ({{problemInfo.fileName}})</span>
                     </a>
                 </li>
             </ul>
         </div>
     </div>
+    <div visualization id="visualization-container"></div>
 </div>
 

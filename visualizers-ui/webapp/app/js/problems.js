@@ -1,14 +1,4 @@
 
-function _getFullFilePath(fileName, problemType) {
-    switch (problemType) {
-        case 'tsp': return ("data/tsp/" + fileName);
-        case 'vrp': return ("data/vrp/" + fileName);
-        case 'wlp': return ("data/wlp/" + fileName);
-        default: return undefined
-    }
-}
-
-
 angular.module("problemSets", ["ngRoute"])
     .config(['$routeProvider', function($routeProvider) {
         $routeProvider.
@@ -23,8 +13,6 @@ angular.module("problemSets", ["ngRoute"])
             otherwise({
                 redirectTo: '/tsp'
             });
-
-
     }])
     .run(function($rootScope, $location) {
         $rootScope.goTo = function(url) {
@@ -58,12 +46,22 @@ angular.module("problemSets", ["ngRoute"])
         ProblemsLoader.loadProblem("tsp", $routeParams.problemId, function(problemId) {
             $location.path("/tsp/" + problemId)
         });
-        $scope.problems = ProblemsLoader.problems
+        $scope.problems = ProblemsLoader.problems;
     })
     .controller("VrpController", function($scope, $routeParams, $location, ProblemsLoader) {
         ProblemsLoader.loadProblem("vrp", $routeParams.problemId, function(problemId) {
             $location.path("/vrp/" + problemId)
         });
         $scope.problems = ProblemsLoader.problems
+    })
+    .directive("visualization", function() {
+        return {
+            restrict: 'EA',
+            link: function($scope, $element) {
+                var visualizer = ($scope.problems.type == "tsp")
+                    ? new TspVisualizer($element, $scope.problems.current)
+                    : new VrpVisualizer($element, $scope.problems.current)
+            }
+        }
     });
 

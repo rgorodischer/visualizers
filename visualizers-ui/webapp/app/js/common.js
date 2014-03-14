@@ -14,21 +14,6 @@
     }
 })();
 
-//function _bindNavigationEvents() {
-//	$('.navbar a[href="#visualizers"], .navbar a[href="#examples"], .navbar a[href="#contacts"]').click(function() {
-//		$('.navbar a').removeClass('selected');
-//		$(this).addClass('selected');
-//	});
-//}
-
-function _loadJsonFile(fileName, callback) {
-	$.getJSON(fileName, function(data) {
-        if (callback) {
-            callback(data)
-        }
-    });
-}
-
 function _applyTemplate(templateName, data) {
     if (!ich[templateName]) {
         $.ajax({

@@ -51,7 +51,7 @@ h1 {
 #problems-set a {
     display: inline-block;
     width: 100%;
-    padding: 12px;
+    padding: 10px 12px;
 }
 
 #problems-set span.file-ref {

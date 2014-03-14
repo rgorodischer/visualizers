@@ -1,12 +1,3 @@
-function _selectVisualizer(fileName) {
-    return fileName.contains('tsp')
-        ? _visualizeTSPSituation
-        : fileName.contains('vrp')
-        ? _visualizeVRPSituation
-        : fileName.contains('wlp')
-        ? _visualizeWLPSituation()
-        : undefined;
-}
 
 function _visualizeTSPSituation(data) {
     var xCoordinates = $.map(data, function(point) {
@@ -35,13 +26,45 @@ function _visualizeTSPSituation(data) {
     visualizer.showSubmitForm();
 }
 
-function _visualizeVRPSituation(data) {
 
+//--------in constructor-------------
+//0. clean up                              (done)
+//1. calculate necessary height/width
+//2. calculate pretty height/width
+//3. calculate pretty lines number
+//4. generate lines
+//------in render function-----------
+//5. make mapper function
+//6. draw lines through the mapper
+//7. draw points through the mapper
+function BaseVisualizer(container, data) {
+    console.log("Data: " + JSON.stringify(data));
+    this.container = container;
+    this.data = data;
+    this.reset();
 }
 
-function _visualizeWLPSituation(data) {
+BaseVisualizer.prototype.reset = function() {
+    this.container.find('svg').remove();
+    this.canvas = d3.select(this.container[0]).append('svg')
+        .attr("class", "visualization")
+        .attr("width", this.container.width())
+        .attr("height", this.container.height())
+};
 
+function TspVisualizer(container, data) {
+    BaseVisualizer.call(this, container, data);
+    console.log("Visualizing TSP");
 }
+
+TspVisualizer.prototype = Object.create(BaseVisualizer.prototype);
+
+function VrpVisualizer(container, data) {
+    BaseVisualizer.call(this, container, data);
+    console.log("Visualizing VRP")
+}
+
+VrpVisualizer.prototype = Object.create(BaseVisualizer.prototype);
 
 function Visualizer(config) {
 
