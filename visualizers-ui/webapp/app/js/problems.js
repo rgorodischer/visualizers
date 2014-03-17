@@ -19,6 +19,11 @@ angular.module("problemSets", ["ngRoute"])
             $location.path(url);
         };
     })
+    .service("ProblemsTracker", function() {
+        this.currentProblemId = undefined;
+        this.setCurrentProblem = function(problemId) { this.currentProblemId = problemId };
+        this.getCurrentProblem = function() { return this.currentProblemId };
+    })
     .service("ProblemsLoader", function($http) {
         var problemsData = {
             type : '',
@@ -35,7 +40,10 @@ angular.module("problemSets", ["ngRoute"])
                         redirect(index[0].fileName)
                     } else {
                         $http.get("data/" + problemType + "/" + problemId + ".json", {cache : true}).success(function(problem) {
-                            problemsData.current = problem
+                            problemsData.current = {
+                                id : problemId,
+                                definition : problem
+                            }
                         })
                     }
                 })
@@ -57,10 +65,18 @@ angular.module("problemSets", ["ngRoute"])
     .directive("visualization", function() {
         return {
             restrict: 'EA',
-            link: function($scope, $element) {
-                var visualizer = ($scope.problems.type == "tsp")
-                    ? new TspVisualizer($element, $scope.problems.current)
-                    : new VrpVisualizer($element, $scope.problems.current)
+            controller: function($scope, $element, ProblemsTracker) {
+                $scope.$watch("problems.current", function(currentProblem) {
+                    if (currentProblem.id !== ProblemsTracker.getCurrentProblem()) {
+                        ProblemsTracker.setCurrentProblem(currentProblem.id);
+
+                        var visualizer = ($scope.problems.type == "tsp")
+                            ? new TspVisualizer($element, $scope.problems.current.definition)
+                            : new VrpVisualizer($element, $scope.problems.current.definition);
+                        visualizer.defineVisualizationRegion()
+                    }
+                });
+
             }
         }
     });

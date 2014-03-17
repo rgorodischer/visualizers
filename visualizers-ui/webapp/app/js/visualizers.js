@@ -38,7 +38,6 @@ function _visualizeTSPSituation(data) {
 //6. draw lines through the mapper
 //7. draw points through the mapper
 function BaseVisualizer(container, data) {
-    console.log("Data: " + JSON.stringify(data));
     this.container = container;
     this.data = data;
     this.reset();
@@ -46,6 +45,7 @@ function BaseVisualizer(container, data) {
 
 BaseVisualizer.prototype.reset = function() {
     this.container.find('svg').remove();
+
     this.canvas = d3.select(this.container[0]).append('svg')
         .attr("class", "visualization")
         .attr("width", this.container.width())
@@ -58,6 +58,12 @@ function TspVisualizer(container, data) {
 }
 
 TspVisualizer.prototype = Object.create(BaseVisualizer.prototype);
+
+TspVisualizer.prototype.defineVisualizationRegion = function() {
+    angular.forEach(this.data, function(value) {
+        console.log(JSON.stringify(value))
+    })
+};
 
 function VrpVisualizer(container, data) {
     BaseVisualizer.call(this, container, data);
