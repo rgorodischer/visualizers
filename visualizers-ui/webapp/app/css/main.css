@@ -111,8 +111,7 @@ div.solution {
  */
 #problems-set ul {
     position: relative;
-    /*width: 180px;*/
-    max-height: 450px;
+    max-height: 468px;
     margin: 10px 0;
     padding: 0;
     border: 1px solid #bbb;
