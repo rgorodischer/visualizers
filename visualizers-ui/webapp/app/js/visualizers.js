@@ -29,7 +29,7 @@ function _visualizeTSPSituation(data) {
 
 //--------in constructor-------------
 //0. clean up                              (done)
-//1. calculate necessary height/width
+//1. calculate necessary height/width      (done)
 //2. calculate pretty height/width
 //3. calculate pretty lines number
 //4. generate lines
@@ -52,6 +52,24 @@ BaseVisualizer.prototype.reset = function() {
         .attr("height", this.container.height())
 };
 
+BaseVisualizer.prototype.__ensureVisualizationBoundariesSufficient = function(points) {
+    var self = this;
+    angular.forEach(points, function(value) {
+        if (self.minX === undefined || self.minX > value.x) {
+            self.minX = value.x
+        }
+        if (self.maxX === undefined || self.maxX < value.x) {
+            self.maxX = value.x
+        }
+        if (self.minY === undefined || self.minY > value.y) {
+            self.minY = value.y
+        }
+        if (self.maxY === undefined || self.maxY < value.y) {
+            self.maxY = value.y
+        }
+    });
+};
+
 function TspVisualizer(container, data) {
     BaseVisualizer.call(this, container, data);
     console.log("Visualizing TSP");
@@ -60,9 +78,7 @@ function TspVisualizer(container, data) {
 TspVisualizer.prototype = Object.create(BaseVisualizer.prototype);
 
 TspVisualizer.prototype.defineVisualizationRegion = function() {
-    angular.forEach(this.data, function(value) {
-        console.log(JSON.stringify(value))
-    })
+    this.__ensureVisualizationBoundariesSufficient(this.data);
 };
 
 function VrpVisualizer(container, data) {
@@ -71,6 +87,11 @@ function VrpVisualizer(container, data) {
 }
 
 VrpVisualizer.prototype = Object.create(BaseVisualizer.prototype);
+
+VrpVisualizer.prototype.defineVisualizationRegion = function() {
+    this.__ensureVisualizationBoundariesSufficient(this.data.customers);
+    this.__ensureVisualizationBoundariesSufficient([this.data.warehouse]);
+};
 
 function Visualizer(config) {
 
