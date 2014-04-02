@@ -73,7 +73,12 @@ angular.module("problemSets", ["ngRoute"])
                         var visualizer = ($scope.problems.type == "tsp")
                             ? new TspVisualizer($element, $scope.problems.current.definition)
                             : new VrpVisualizer($element, $scope.problems.current.definition);
-                        visualizer.defineVisualizationRegion()
+
+                        console.log(JSON.stringify(visualizer.problemBoundaries));
+                        console.log(JSON.stringify(visualizer.adjustedBoundaries));
+                        visualizer.ensurePadding('10px');
+                        console.log(JSON.stringify(visualizer.adjustedBoundaries));
+
                     }
                 });
 

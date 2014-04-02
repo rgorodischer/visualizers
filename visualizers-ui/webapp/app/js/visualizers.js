@@ -30,17 +30,20 @@ function _visualizeTSPSituation(data) {
 //--------in constructor-------------
 //0. clean up                              (done)
 //1. calculate necessary height/width      (done)
-//2. calculate pretty height/width
+//2. calculate pretty height/width         (done)
 //3. calculate pretty lines number
 //4. generate lines
 //------in render function-----------
 //5. make mapper function
 //6. draw lines through the mapper
 //7. draw points through the mapper
-function BaseVisualizer(container, data) {
+function BaseVisualizer(container, problem) {
     this.container = container;
-    this.data = data;
+    this.problem = problem;
     this.reset();
+
+    this.problemBoundaries = this.calculateProblemBoundaries();
+    this.adjustedBoundaries = this._adjustBoundariesToContainerShape(this.problemBoundaries);
 }
 
 BaseVisualizer.prototype.reset = function() {
@@ -52,45 +55,105 @@ BaseVisualizer.prototype.reset = function() {
         .attr("height", this.container.height())
 };
 
-BaseVisualizer.prototype.__ensureVisualizationBoundariesSufficient = function(points) {
-    var self = this;
+BaseVisualizer.prototype._adjustBoundaries = function(points, problemBoundaries) {
     angular.forEach(points, function(value) {
-        if (self.minX === undefined || self.minX > value.x) {
-            self.minX = value.x
+        if (problemBoundaries.minX === undefined || problemBoundaries.minX > value.x) {
+            problemBoundaries.minX = value.x
         }
-        if (self.maxX === undefined || self.maxX < value.x) {
-            self.maxX = value.x
+        if (problemBoundaries.maxX === undefined || problemBoundaries.maxX < value.x) {
+            problemBoundaries.maxX = value.x
         }
-        if (self.minY === undefined || self.minY > value.y) {
-            self.minY = value.y
+        if (problemBoundaries.minY === undefined || problemBoundaries.minY > value.y) {
+            problemBoundaries.minY = value.y
         }
-        if (self.maxY === undefined || self.maxY < value.y) {
-            self.maxY = value.y
+        if (problemBoundaries.maxY === undefined || problemBoundaries.maxY < value.y) {
+            problemBoundaries.maxY = value.y
         }
     });
+    return problemBoundaries;
 };
 
-function TspVisualizer(container, data) {
-    BaseVisualizer.call(this, container, data);
-    console.log("Visualizing TSP");
+BaseVisualizer.prototype._adjustBoundariesToContainerShape = function(boundaries) {
+    var containerSidesRatio = this.container.width() / this.container.height();
+
+    var regionWidth = boundaries.maxX - boundaries.minX;
+    var regionHeight = boundaries.maxY - boundaries.minY;
+    var regionSidesRatio = regionWidth / regionHeight;
+
+    var adjustedBoundaries = angular.copy(boundaries);
+    if (containerSidesRatio > regionSidesRatio) {
+        var adjustedWidth = regionHeight * containerSidesRatio;
+        var widthAdjustmentComponent = (adjustedWidth - regionWidth) / 2;
+        adjustedBoundaries.minX -= widthAdjustmentComponent;
+        adjustedBoundaries.maxX += widthAdjustmentComponent;
+    } else if (regionSidesRatio > containerSidesRatio) {
+        var adjustedHeight = regionWidth / containerSidesRatio;
+        var heightAdjustmentComponent = (adjustedHeight - regionHeight) / 2;
+        adjustedBoundaries.minY -= heightAdjustmentComponent;
+        adjustedBoundaries.maxY += heightAdjustmentComponent;
+    }
+    return adjustedBoundaries
+};
+
+//Ensures visualization has padding.
+//Padding is specified as a string parameter.
+//There are two acceptable formats of padding:
+// - with 'px'-suffix, e.g. ensurePadding('10px')
+// - with '%'-suffix, e.g. ensurePadding('5%')
+BaseVisualizer.prototype.ensurePadding = function(padding) {
+    if (typeof padding !== 'string') {
+        throw new TypeError("String value is expected as 'padding' argument.")
+    }
+    var paddingFormat = /(\d+)(px|%)/;
+    var analysedPadding = padding.match(paddingFormat);
+    if (analysedPadding) {
+        var units = parseInt(analysedPadding[1], 10);
+        var unitType = analysedPadding[2];
+
+        var region = this.adjustedBoundaries;
+
+        var horizontalPaddingPx = unitType === 'px'
+            ? units
+            : Math.ceil((region.maxX - region.minX) * (units / 100.0));
+
+        var verticalPaddingPx = unitType === 'px'
+            ? units
+            : Math.ceil((region.maxY - region.minY) * (units / 100.0));
+
+        region.minX = Math.min(region.minX, this.problemBoundaries.minX - horizontalPaddingPx);
+        region.maxX = Math.max(region.maxX, this.problemBoundaries.maxX + horizontalPaddingPx);
+
+        region.minY = Math.min(region.minY, this.problemBoundaries.minY - verticalPaddingPx);
+        region.maxY = Math.max(region.maxY, this.problemBoundaries.maxY + verticalPaddingPx);
+
+        this.adjustedBoundaries = this._adjustBoundariesToContainerShape(region);
+
+    } else {
+        throw new Error("Padding argument doesn't match expected format.")
+    }
+};
+
+function TspVisualizer(container, tspProblem) {
+    BaseVisualizer.call(this, container, tspProblem);
 }
 
 TspVisualizer.prototype = Object.create(BaseVisualizer.prototype);
 
-TspVisualizer.prototype.defineVisualizationRegion = function() {
-    this.__ensureVisualizationBoundariesSufficient(this.data);
+TspVisualizer.prototype.calculateProblemBoundaries = function() {
+    return this._adjustBoundaries(this.problem, {});
 };
 
-function VrpVisualizer(container, data) {
-    BaseVisualizer.call(this, container, data);
-    console.log("Visualizing VRP")
+function VrpVisualizer(container, vrpProblem) {
+    BaseVisualizer.call(this, container, vrpProblem);
 }
 
 VrpVisualizer.prototype = Object.create(BaseVisualizer.prototype);
 
-VrpVisualizer.prototype.defineVisualizationRegion = function() {
-    this.__ensureVisualizationBoundariesSufficient(this.data.customers);
-    this.__ensureVisualizationBoundariesSufficient([this.data.warehouse]);
+VrpVisualizer.prototype.calculateProblemBoundaries = function() {
+    var boundaries = {};
+    this._adjustBoundaries(this.problem.customers, boundaries);
+    this._adjustBoundaries([this.problem.warehouse], boundaries);
+    return boundaries;
 };
 
 function Visualizer(config) {
