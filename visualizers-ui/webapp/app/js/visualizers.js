@@ -100,7 +100,6 @@ BaseVisualizer.prototype._adjustBoundariesToContainerShape = function(boundaries
 //There are two acceptable formats of padding:
 // - with 'px'-suffix, e.g. ensurePadding('10px')
 // - with '%'-suffix, e.g. ensurePadding('5%')
-//todo: fix for percents
 BaseVisualizer.prototype.ensurePadding = function(padding) {
     if (typeof padding !== 'string') {
         throw new TypeError("String value is expected as 'padding' argument.")
@@ -115,11 +114,11 @@ BaseVisualizer.prototype.ensurePadding = function(padding) {
 
         var horizontalPaddingPx = unitType === 'px'
             ? units
-            : Math.ceil((region.maxX - region.minX) * (units / 100.0));
+            : (region.maxX - region.minX) * (units / 100.0);
 
         var verticalPaddingPx = unitType === 'px'
             ? units
-            : Math.ceil((region.maxY - region.minY) * (units / 100.0));
+            : (region.maxY - region.minY) * (units / 100.0);
 
         region.minX = Math.min(region.minX, this.problemBoundaries.minX - horizontalPaddingPx);
         region.maxX = Math.max(region.maxX, this.problemBoundaries.maxX + horizontalPaddingPx);
