@@ -31,10 +31,10 @@ function _visualizeTSPSituation(data) {
 //0. clean up                              (done)
 //1. calculate necessary height/width      (done)
 //2. calculate pretty height/width         (done)
-//3. calculate pretty lines number
-//4. generate lines
-//------in render function-----------
-//5. make mapper function
+//3. make mapper function
+//------in render functions-----------
+//4. calculate grid cell size
+//5. generate grid lines
 //6. draw lines through the mapper
 //7. draw points through the mapper
 function BaseVisualizer(container, problem) {
@@ -100,6 +100,7 @@ BaseVisualizer.prototype._adjustBoundariesToContainerShape = function(boundaries
 //There are two acceptable formats of padding:
 // - with 'px'-suffix, e.g. ensurePadding('10px')
 // - with '%'-suffix, e.g. ensurePadding('5%')
+//todo: fix for percents
 BaseVisualizer.prototype.ensurePadding = function(padding) {
     if (typeof padding !== 'string') {
         throw new TypeError("String value is expected as 'padding' argument.")
@@ -131,6 +132,99 @@ BaseVisualizer.prototype.ensurePadding = function(padding) {
     } else {
         throw new Error("Padding argument doesn't match expected format.")
     }
+};
+
+BaseVisualizer.prototype.drawGrid = function(desiredSquaresNumber) {
+
+    function findMarginalDivisiblePoints(side, minCoordinate, maxCoordinate) {
+        return [
+            minCoordinate + (side - minCoordinate % side) % side,
+            maxCoordinate - (side + maxCoordinate % side) % side
+        ]
+    }
+
+    function findOptimalSquareSide(boundaries) {
+
+        function findNearestPrettyNumber(number) {
+            var niceBases = [0.1, 0.125, 0.15, 0.2, 0.25, 0.4, 0.5, 0.75, 1];
+
+            var multiplier = 1;
+            while (number / multiplier > 1) {
+                multiplier *= 10
+            }
+
+            var nearestPrettyNumber = -1;
+            var smallestError = -1;
+
+            for (var i = 0; i < niceBases.length; i++) {
+                var prettyNumber = niceBases[i] * multiplier;
+                var error = Math.abs(prettyNumber - number);
+                if (nearestPrettyNumber == -1 || error < smallestError) {
+                    nearestPrettyNumber = prettyNumber;
+                    smallestError = error;
+                }
+            }
+            return nearestPrettyNumber
+        }
+
+        function compareRatios(r1, r2) {
+            for (var i = 0; i < r1.length; i++) {
+                if (r1[i] < r2[i]) return -1;
+                if (r1[i] > r2[i]) return 1;
+            }
+            return 0;
+        }
+
+        var optimalSide = -1;
+        var smallestLineFromBorderToSideRatios = [];  //want to maximize the smallest of these
+
+        var regionWidth = (boundaries.maxX - boundaries.minX);
+        var regionHeight = (boundaries.maxY - boundaries.minY);
+        for (var squaresNumber = desiredSquaresNumber.min; squaresNumber <= desiredSquaresNumber.max; squaresNumber++) {
+            var exactSide = regionWidth / squaresNumber;
+            var prettySide = findNearestPrettyNumber(exactSide);
+
+            if (regionHeight / prettySide < desiredSquaresNumber.min || regionWidth / prettySide > desiredSquaresNumber.max) {
+                continue
+            }
+
+            var horizontalMarginalPoints = findMarginalDivisiblePoints(prettySide, boundaries.minX, boundaries.maxX);
+            var verticalMarginalPoints = findMarginalDivisiblePoints(prettySide, boundaries.minY, boundaries.maxY);
+
+            var ratios = [
+                (horizontalMarginalPoints[0] - boundaries.minX) / prettySide,
+                (boundaries.maxX - horizontalMarginalPoints[1]) / prettySide,
+                (verticalMarginalPoints[0] - boundaries.minY)  / prettySide,
+                (boundaries.maxY - verticalMarginalPoints[1]) / prettySide
+            ];
+            ratios.sort();
+            if (optimalSide == -1 || compareRatios(ratios, smallestLineFromBorderToSideRatios) == 1) {
+                optimalSide = prettySide;
+                smallestLineFromBorderToSideRatios = ratios;
+            }
+        }
+        return optimalSide
+    }
+
+    function generateLines(startPoint, endPoint, step) {
+        var lines = [];
+        for (var line = startPoint; line <= endPoint; line += step) {
+            lines.push(line);
+        }
+        return lines;
+    }
+
+    var boundaries = this.adjustedBoundaries;
+    var squareSide = findOptimalSquareSide(boundaries);
+
+    var marginalVerticalLines = findMarginalDivisiblePoints(squareSide, boundaries.minX, boundaries.maxX);
+    var verticalLines = generateLines(marginalVerticalLines[0], marginalVerticalLines[1], squareSide);
+
+    var marginalHorizontalLines = findMarginalDivisiblePoints(squareSide, boundaries.minY, boundaries.maxY);
+    var horizontalLines = generateLines(marginalHorizontalLines[0], marginalHorizontalLines[1], squareSide);
+
+    console.log(JSON.stringify(verticalLines));
+    console.log(JSON.stringify(horizontalLines));
 };
 
 function TspVisualizer(container, tspProblem) {

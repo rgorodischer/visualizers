@@ -74,10 +74,8 @@ angular.module("problemSets", ["ngRoute"])
                             ? new TspVisualizer($element, $scope.problems.current.definition)
                             : new VrpVisualizer($element, $scope.problems.current.definition);
 
-                        console.log(JSON.stringify(visualizer.problemBoundaries));
-                        console.log(JSON.stringify(visualizer.adjustedBoundaries));
-                        visualizer.ensurePadding('10px');
-                        console.log(JSON.stringify(visualizer.adjustedBoundaries));
+                        visualizer.ensurePadding('10%');
+                        visualizer.drawGrid({min: 5, max: 12})
 
                     }
                 });
