@@ -56,6 +56,7 @@
 
 <script src="app/js/common.js"></script>
 <script src="app/js/problems.js"></script>
+<script src="app/js/cartesianScale.js"></script>
 <script src="app/js/visualizers.js"></script>
 </body>
 </html>

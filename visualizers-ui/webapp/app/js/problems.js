@@ -75,8 +75,7 @@ angular.module("problemSets", ["ngRoute"])
                             : new VrpVisualizer($element, $scope.problems.current.definition);
 
                         visualizer.ensurePadding('10%');
-                        visualizer.drawGrid({min: 5, max: 12})
-
+                        visualizer.drawGrid({min: 5, max: 12});
                     }
                 });
 

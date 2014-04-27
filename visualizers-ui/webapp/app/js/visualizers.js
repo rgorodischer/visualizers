@@ -226,6 +226,7 @@ BaseVisualizer.prototype.drawGrid = function(desiredSquaresNumber) {
     console.log(JSON.stringify(horizontalLines));
 };
 
+
 function TspVisualizer(container, tspProblem) {
     BaseVisualizer.call(this, container, tspProblem);
 }
