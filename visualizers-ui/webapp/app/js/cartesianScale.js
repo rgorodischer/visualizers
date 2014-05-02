@@ -7,6 +7,12 @@
 // xyScale.y(p.y) === val
 // xyScale(p) === { x: val1, y: val2 }
 
+
+//todo:
+//ticksRound(values)
+//ticks(count)
+//tickFormat(format)
+//copy()
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
         { domain : [0, 1], range : [0, 1] },
@@ -43,7 +49,13 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
 
     function mapper(spaces) {
         return function(val) {
-            return ((val - spaces.correctedDomain[0]) / interval(spaces.correctedDomain)) * interval(spaces.range)
+            return ((val - spaces.correctedDomain[0]) / interval(spaces.correctedDomain)) * interval(spaces.range) + spaces.range[0]
+        }
+    }
+
+    function inverter(spaces) {
+        return function(val) {
+            return ((val - spaces.range[0]) / interval(spaces.range)) * interval(spaces.correctedDomain) + spaces.correctedDomain[0]
         }
     }
 
@@ -78,17 +90,6 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
     var xScale = mapper(xSpaces);
     var yScale = mapper(ySpaces);
 
-    xScale.y = yScale;
-    yScale.x = xScale;
-
-    xScale.domain = domain(xSpaces);
-    xScale.range = range(xSpaces);
-    xScale.correctedDomain = correctedDomain(xSpaces);
-
-    yScale.domain = domain(ySpaces);
-    yScale.range = range(ySpaces);
-    yScale.correctedDomain = correctedDomain(ySpaces);
-
     var xyScale = function(point) {
         return {
             x : xyScale.x(point.x),
@@ -96,8 +97,26 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
         }
     };
 
+    xScale.y = yScale;
+    xScale.domain = domain(xSpaces);
+    xScale.range = range(xSpaces);
+    xScale.correctedDomain = correctedDomain(xSpaces);
+
+    xScale.invert = inverter(xSpaces);
+    yScale.x = xScale;
+    yScale.domain = domain(ySpaces);
+    yScale.range = range(ySpaces);
+    yScale.correctedDomain = correctedDomain(ySpaces);
+    yScale.invert = inverter(ySpaces);
+
     xyScale.x = xScale;
     xyScale.y = yScale;
+    xyScale.invert = function(point) {
+        return {
+            x : xyScale.x.invert(point.x),
+            y : xyScale.y.invert(point.y)
+        }
+    };
 
     rescale();
     return xyScale
