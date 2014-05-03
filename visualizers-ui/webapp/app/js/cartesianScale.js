@@ -9,9 +9,7 @@
 
 
 //todo:
-//ticks(count)
-//tickFormat(format)
-//copy()
+//ticks(count, [format])
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
         { domain : [0, 1], range : [0, 1], ticksRound : [0.1, 0.25, 0.5, 1] },
@@ -83,7 +81,7 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
             spaces.range = r.slice(0);
             rescale();
             return this;
-        };
+        }
     }
 
     function ticksRound(spaces) {
@@ -138,6 +136,12 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
         this.x.ticksRound(values);
         this.y.ticksRound(values);
         return this;
+    };
+    xyScale.copy = function() {
+        return d3_cartesian_scale(
+            { domain : xSpaces.domain.slice(0), range : xSpaces.range.slice(0), ticksRound : xSpaces.ticksRound.slice(0) },
+            { domain : ySpaces.domain.slice(0), range : ySpaces.range.slice(0), ticksRound : ySpaces.ticksRound.slice(0) }
+        )
     };
 
     rescale();
