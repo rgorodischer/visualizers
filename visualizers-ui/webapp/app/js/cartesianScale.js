@@ -9,14 +9,13 @@
 
 
 //todo:
-//ticksRound(values)
 //ticks(count)
 //tickFormat(format)
 //copy()
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
-        { domain : [0, 1], range : [0, 1] },
-        { domain : [0, 1], range : [0, 1] }
+        { domain : [0, 1], range : [0, 1], ticksRound : [0.1, 0.25, 0.5, 1] },
+        { domain : [0, 1], range : [0, 1], ticksRound : [0.1, 0.25, 0.5, 1] }
     )
 };
 
@@ -87,6 +86,16 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
         };
     }
 
+    function ticksRound(spaces) {
+        return function(values) {
+            if (!arguments.length || !values.length) {
+                return spaces.ticksRound.slice(0)
+            }
+            spaces.ticksRound = values.slice(0);
+            return this;
+        }
+    }
+
     var xScale = mapper(xSpaces);
     var yScale = mapper(ySpaces);
 
@@ -101,13 +110,15 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
     xScale.domain = domain(xSpaces);
     xScale.range = range(xSpaces);
     xScale.correctedDomain = correctedDomain(xSpaces);
-
     xScale.invert = inverter(xSpaces);
+    xScale.ticksRound = ticksRound(xSpaces);
+
     yScale.x = xScale;
     yScale.domain = domain(ySpaces);
     yScale.range = range(ySpaces);
     yScale.correctedDomain = correctedDomain(ySpaces);
     yScale.invert = inverter(ySpaces);
+    yScale.ticksRound = ticksRound(ySpaces);
 
     xyScale.x = xScale;
     xyScale.y = yScale;
@@ -116,6 +127,17 @@ function d3_cartesian_scale(xSpaces, ySpaces) {
             x : xyScale.x.invert(point.x),
             y : xyScale.y.invert(point.y)
         }
+    };
+    xyScale.ticksRound = function(values) {
+        if (!arguments.length || !values.length) {
+            return {
+                x : xyScale.x.ticksRound(),
+                y : xyScale.y.ticksRound()
+            }
+        }
+        this.x.ticksRound(values);
+        this.y.ticksRound(values);
+        return this;
     };
 
     rescale();
