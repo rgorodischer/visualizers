@@ -1,6 +1,6 @@
 // var xyScale = d3.scale.cartesian()
 //    .ticksRound([0.1, 0.2, 0.3, 0.5, 1])
-//    .x.domain([x1, x2]).range([rx1, rx2]).minPadding('30px')
+//    .x.domain([x1, x2]).range([rx1, rx2]).minPadding(30)
 //    .y.domain([y1, y2]).range([ry1, ry2]).minPadding('5%')
 //
 // var p = { x: v1, y: v2 }
@@ -26,12 +26,12 @@
 
 
 //todo:
-//minPadding(px|%)
+//minPadding(n|%)
 //ticksFormat(format)
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
-        { domain : [0, 1], range : [0, 1] },
-        { domain : [0, 1], range : [0, 1] },
+        { domain : [0, 1], range : [0, 1], padding : function() { return 0 } },
+        { domain : [0, 1], range : [0, 1], padding : function() { return 0 } },
         [0.1, 0.25, 0.5, 1]
     )
 };
@@ -103,6 +103,25 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         }
     }
 
+    function minPadding(spaces) {
+        return function(padding) {
+            if (typeof padding == 'string') {
+                var parsedPadding = padding.match(/^(\d+)%$/);
+                if (!parsedPadding) {
+                    throw new TypeError("String value of format 'n%' is expected.")
+                }
+                var paddingPercents = parseInt(parsedPadding[1], 10);
+                spaces.padding = function() { return interval(spaces.range) * (paddingPercents / 100.0); };
+                return this;
+            } else if (typeof padding == 'number') {
+                spaces.padding = function() { return padding; };
+                return this;
+            } else {
+                return spaces.padding()
+            }
+        }
+    }
+
     var xScale = mapper(xSpaces);
     var yScale = mapper(ySpaces);
 
@@ -118,12 +137,14 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     xScale.range = range(xSpaces);
     xScale.correctedDomain = correctedDomain(xSpaces);
     xScale.invert = inverter(xSpaces);
+    xScale.minPadding = minPadding(xSpaces);
 
     yScale.x = xScale;
     yScale.domain = domain(ySpaces);
     yScale.range = range(ySpaces);
     yScale.correctedDomain = correctedDomain(ySpaces);
     yScale.invert = inverter(ySpaces);
+    yScale.minPadding = minPadding(ySpaces);
 
     xyScale.x = xScale;
     xyScale.y = yScale;
@@ -139,6 +160,14 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         }
         ticksRound = values.slice(0);
         return this;
+    };
+    xyScale.minPadding = function(padding) {
+        if (typeof padding == 'number' || typeof padding == 'string') {
+            this.x.minPadding(padding).y.minPadding(padding);
+            return this;
+        } else {
+            return [ this.x.minPadding(), this.y.minPadding() ]
+        }
     };
     xyScale.ticks = function() {
         arguments = arguments.length && arguments || [10];
