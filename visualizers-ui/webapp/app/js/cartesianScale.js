@@ -1,7 +1,7 @@
 // var xyScale = d3.scale.cartesian()
 //    .ticksRound([0.1, 0.2, 0.3, 0.5, 1])
-//    .x.domain([x1, x2]).range([rx1, rx2]).minPadding(30)
-//    .y.domain([y1, y2]).range([ry1, ry2]).minPadding('5%')
+//    .x.domain([x1, x2]).range([rx1, rx2]).padding(30)
+//    .y.domain([y1, y2]).range([ry1, ry2]).padding('5%')
 //
 // var p = { x: v1, y: v2 }
 // xyScale.x(p.x) === val
@@ -26,7 +26,7 @@
 
 
 //todo:
-//minPadding(n|%)
+//padding(n|%)
 //ticksFormat(format)
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
@@ -51,13 +51,13 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         ySpaces.correctedDomain = ySpaces.domain.slice(0);
 
         if (rangesRatio > domainsRatio) {
-            var recalculatedDomainWidth = domainHeight * rangesRatio;
-            var widthAdjustmentComponent = (recalculatedDomainWidth - domainWidth) / 2;
+            var correctedDomainWidth = domainHeight * rangesRatio;
+            var widthAdjustmentComponent = (correctedDomainWidth - domainWidth) / 2;
             xSpaces.correctedDomain[0] -= widthAdjustmentComponent;
             xSpaces.correctedDomain[1] += widthAdjustmentComponent;
         } else if (domainsRatio > rangesRatio) {
-            var recalculatedDomainHeight = domainWidth / rangesRatio;
-            var heightAdjustmentComponent = (recalculatedDomainHeight - domainHeight) / 2;
+            var correctedDomainHeight = domainWidth / rangesRatio;
+            var heightAdjustmentComponent = (correctedDomainHeight - domainHeight) / 2;
             ySpaces.correctedDomain[0] -= heightAdjustmentComponent;
             ySpaces.correctedDomain[1] += heightAdjustmentComponent;
         }
@@ -103,18 +103,18 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         }
     }
 
-    function minPadding(spaces) {
-        return function(padding) {
-            if (typeof padding == 'string') {
-                var parsedPadding = padding.match(/^(\d+)%$/);
+    function padding(spaces) {
+        return function(paddingParam) {
+            if (typeof paddingParam == 'string') {
+                var parsedPadding = paddingParam.match(/^(\d+)%$/);
                 if (!parsedPadding) {
                     throw new TypeError("String value of format 'n%' is expected.")
                 }
                 var paddingPercents = parseInt(parsedPadding[1], 10);
                 spaces.padding = function() { return interval(spaces.range) * (paddingPercents / 100.0); };
                 return this;
-            } else if (typeof padding == 'number') {
-                spaces.padding = function() { return padding; };
+            } else if (typeof paddingParam == 'number') {
+                spaces.padding = function() { return paddingParam; };
                 return this;
             } else {
                 return spaces.padding()
@@ -137,14 +137,14 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     xScale.range = range(xSpaces);
     xScale.correctedDomain = correctedDomain(xSpaces);
     xScale.invert = inverter(xSpaces);
-    xScale.minPadding = minPadding(xSpaces);
+    xScale.padding = padding(xSpaces);
 
     yScale.x = xScale;
     yScale.domain = domain(ySpaces);
     yScale.range = range(ySpaces);
     yScale.correctedDomain = correctedDomain(ySpaces);
     yScale.invert = inverter(ySpaces);
-    yScale.minPadding = minPadding(ySpaces);
+    yScale.padding = padding(ySpaces);
 
     xyScale.x = xScale;
     xyScale.y = yScale;
@@ -161,12 +161,12 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         ticksRound = values.slice(0);
         return this;
     };
-    xyScale.minPadding = function(padding) {
-        if (typeof padding == 'number' || typeof padding == 'string') {
-            this.x.minPadding(padding).y.minPadding(padding);
+    xyScale.padding = function(paddingParam) {
+        if (typeof paddingParam == 'number' || typeof paddingParam == 'string') {
+            this.x.padding(paddingParam).y.padding(paddingParam);
             return this;
         } else {
-            return [ this.x.minPadding(), this.y.minPadding() ]
+            return [ this.x.padding(), this.y.padding() ]
         }
     };
     xyScale.ticks = function() {
