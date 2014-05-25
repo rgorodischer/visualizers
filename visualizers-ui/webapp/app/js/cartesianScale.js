@@ -167,6 +167,28 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
 
     xyScale.x = xScale;
     xyScale.y = yScale;
+    xyScale.domain = function(d){
+        if (!arguments.length || d.length !== 2) {
+            return {
+                x : xyScale.x.domain(),
+                y : xyScale.y.domain()
+            }
+        } else {
+            this.x.domain(d).y.domain(d);
+            return this;
+        }
+    };
+    xyScale.range = function(r){
+        if (!arguments.length || r.length !== 2) {
+            return {
+                x : xyScale.x.range(),
+                y : xyScale.y.range()
+            }
+        } else {
+            this.x.range(r).y.range(r);
+            return this;
+        }
+    };
     xyScale.invert = function(point) {
         return {
             x : xyScale.x.invert(point.x),
