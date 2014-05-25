@@ -26,7 +26,6 @@
 
 
 //todo:
-//padding(n|%)
 //ticksFormat(format)
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
@@ -41,26 +40,44 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     function interval(i) { return i[1] - i[0] }
 
     function rescale() {
+
         var rangesRatio = interval(xSpaces.range) / interval(ySpaces.range);
 
-        var domainWidth = interval(xSpaces.domain);
-        var domainHeight = interval(ySpaces.domain);
-        var domainsRatio = domainWidth / domainHeight;
-
-        xSpaces.correctedDomain = xSpaces.domain.slice(0);
-        ySpaces.correctedDomain = ySpaces.domain.slice(0);
-
-        if (rangesRatio > domainsRatio) {
-            var correctedDomainWidth = domainHeight * rangesRatio;
-            var widthAdjustmentComponent = (correctedDomainWidth - domainWidth) / 2;
-            xSpaces.correctedDomain[0] -= widthAdjustmentComponent;
-            xSpaces.correctedDomain[1] += widthAdjustmentComponent;
-        } else if (domainsRatio > rangesRatio) {
-            var correctedDomainHeight = domainWidth / rangesRatio;
-            var heightAdjustmentComponent = (correctedDomainHeight - domainHeight) / 2;
-            ySpaces.correctedDomain[0] -= heightAdjustmentComponent;
-            ySpaces.correctedDomain[1] += heightAdjustmentComponent;
+        function scaleUp(limit, newInterval) {
+            var adjustmentComponent = (newInterval - interval(limit)) / 2;
+            limit[0] -= adjustmentComponent;
+            limit[1] += adjustmentComponent;
         }
+
+        function computeCorrectedDomain(xDomain, yDomain) {
+            var domainWidth = interval(xDomain);
+            var domainHeight = interval(yDomain);
+            var domainsRatio = domainWidth / domainHeight;
+
+            xSpaces.correctedDomain = xDomain.slice(0);
+            ySpaces.correctedDomain = yDomain.slice(0);
+
+            if (rangesRatio > domainsRatio) {
+                var correctedDomainWidth = domainHeight * rangesRatio;
+                scaleUp(xSpaces.correctedDomain, correctedDomainWidth);
+            } else if (domainsRatio > rangesRatio) {
+                var correctedDomainHeight = domainWidth / rangesRatio;
+                scaleUp(ySpaces.correctedDomain, correctedDomainHeight);
+            }
+        }
+
+        function addPadding(spaces) {
+            var requiredPadding = ((spaces.padding() / interval(spaces.range)) * interval(spaces.correctedDomain)) * 2;
+            var currentPadding = interval(spaces.correctedDomain) - interval(spaces.domain);
+            if (requiredPadding > currentPadding) {
+                scaleUp(spaces.correctedDomain, interval(spaces.correctedDomain) + (requiredPadding - currentPadding));
+                computeCorrectedDomain(xSpaces.correctedDomain, ySpaces.correctedDomain);
+            }
+        }
+
+        computeCorrectedDomain(xSpaces.domain, ySpaces.domain);
+        addPadding(xSpaces);
+        addPadding(ySpaces);
     }
 
     function mapper(spaces) {
@@ -112,9 +129,11 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
                 }
                 var paddingPercents = parseInt(parsedPadding[1], 10);
                 spaces.padding = function() { return interval(spaces.range) * (paddingPercents / 100.0); };
+                rescale();
                 return this;
             } else if (typeof paddingParam == 'number') {
                 spaces.padding = function() { return paddingParam; };
+                rescale();
                 return this;
             } else {
                 return spaces.padding()
