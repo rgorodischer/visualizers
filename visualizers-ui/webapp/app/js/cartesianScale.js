@@ -93,14 +93,16 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     }
 
     function domain(spaces) {
-        return function(d) {
-            if (!arguments.length || d.length !== 2) {
+        var domain = function(d) {
+            if (!domain.validator.call(undefined, d)) {
                 return spaces.domain.slice(0)
             }
             spaces.domain = d.slice(0);
             rescale();
             return this;
-        }
+        };
+        domain.validator = function(d) { return d && d.length == 2 };
+        return domain;
     }
 
     function correctedDomain(spaces) {
@@ -110,18 +112,23 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     }
 
     function range(spaces) {
-        return function(r) {
-            if (!arguments.length || r.length !== 2) {
+        var range = function(r) {
+            if (!range.validator.call(undefined, r)) {
                 return spaces.range.slice(0)
             }
             spaces.range = r.slice(0);
             rescale();
             return this;
-        }
+        };
+        range.validator = function(r) { return r && r.length == 2 };
+        return range;
     }
 
     function padding(spaces) {
-        return function(paddingParam) {
+        var padding = function(paddingParam) {
+            if (!padding.validator.call(undefined, paddingParam)) {
+                return spaces.padding()
+            }
             if (typeof paddingParam == 'string') {
                 var parsedPadding = paddingParam.match(/^(\d+)%$/);
                 if (!parsedPadding) {
@@ -129,14 +136,27 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
                 }
                 var paddingPercents = parseInt(parsedPadding[1], 10);
                 spaces.padding = function() { return interval(spaces.range) * (paddingPercents / 100.0); };
-                rescale();
-                return this;
             } else if (typeof paddingParam == 'number') {
                 spaces.padding = function() { return paddingParam; };
-                rescale();
+            }
+            rescale();
+            return this;
+        };
+        padding.validator = function(param) { return typeof param == 'string' || typeof param == 'number' };
+        return padding;
+    }
+
+    function combineXY(fx, fy) {
+        return function(param) {
+            if (fx.validator.call(undefined, param) && fy.validator.call(undefined, param)) {
+                fx(param);
+                fy(param);
                 return this;
             } else {
-                return spaces.padding()
+                return {
+                    x : fx(),
+                    y : fy()
+                }
             }
         }
     }
@@ -167,28 +187,9 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
 
     xyScale.x = xScale;
     xyScale.y = yScale;
-    xyScale.domain = function(d){
-        if (!arguments.length || d.length !== 2) {
-            return {
-                x : xyScale.x.domain(),
-                y : xyScale.y.domain()
-            }
-        } else {
-            this.x.domain(d).y.domain(d);
-            return this;
-        }
-    };
-    xyScale.range = function(r){
-        if (!arguments.length || r.length !== 2) {
-            return {
-                x : xyScale.x.range(),
-                y : xyScale.y.range()
-            }
-        } else {
-            this.x.range(r).y.range(r);
-            return this;
-        }
-    };
+    xyScale.domain = combineXY(xScale.domain, yScale.domain);
+    xyScale.range = combineXY(xScale.range, yScale.range);
+    xyScale.padding = combineXY(xScale.padding, yScale.padding);
     xyScale.invert = function(point) {
         return {
             x : xyScale.x.invert(point.x),
@@ -201,14 +202,6 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         }
         ticksRound = values.slice(0);
         return this;
-    };
-    xyScale.padding = function(paddingParam) {
-        if (typeof paddingParam == 'number' || typeof paddingParam == 'string') {
-            this.x.padding(paddingParam).y.padding(paddingParam);
-            return this;
-        } else {
-            return [ this.x.padding(), this.y.padding() ]
-        }
     };
     xyScale.ticks = function() {
         arguments = arguments.length && arguments || [10];
