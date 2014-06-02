@@ -24,9 +24,6 @@
 // ticks.x
 // ticks.y
 
-
-//todo:
-//ticksFormat(format)
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
         { domain : [0, 1], range : [0, 1], padding : function() { return 0 } },
@@ -146,16 +143,22 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         return padding;
     }
 
-    function combineXY(fx, fy) {
+    function tickFormat(spaces) {
+        return function(count, format) {
+            return d3.scale.linear().domain(spaces.domain.slice(0)).tickFormat(count, format)
+        }
+    }
+
+    function combineXY(fx, fy, cx, cy) {
         return function(param) {
             if (fx.validator.call(undefined, param) && fy.validator.call(undefined, param)) {
-                fx(param);
-                fy(param);
+                fx.apply(cx, arguments);
+                fy.apply(cy, arguments);
                 return this;
             } else {
                 return {
-                    x : fx(),
-                    y : fy()
+                    x : fx.apply(cx, []),
+                    y : fy.apply(cy, [])
                 }
             }
         }
@@ -177,6 +180,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     xScale.correctedDomain = correctedDomain(xSpaces);
     xScale.invert = inverter(xSpaces);
     xScale.padding = padding(xSpaces);
+    xScale.tickFormat = tickFormat(xSpaces);
 
     yScale.x = xScale;
     yScale.domain = domain(ySpaces);
@@ -184,6 +188,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     yScale.correctedDomain = correctedDomain(ySpaces);
     yScale.invert = inverter(ySpaces);
     yScale.padding = padding(ySpaces);
+    yScale.tickFormat = tickFormat(ySpaces);
 
     xyScale.x = xScale;
     xyScale.y = yScale;
