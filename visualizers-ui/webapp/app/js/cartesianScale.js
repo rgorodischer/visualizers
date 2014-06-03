@@ -12,17 +12,14 @@
 // ticks.x
 // ticks.y
 
-// var ticks = xyScale.ticks(8, 10) will return independent ticks i.e. ticks on x and on y scales may have different intervals
-// ticks.x
-// ticks.y
+// var xTicks = xyScale.x.ticks(8)  will return ticks on x scale only;
+//                                 count (8 in this example) is just a desirable number of ticks on the largest scale.
 
 // var ticks = xyScale.ticks([50])  will return ticks of the interval equal to 50 on both x and y scales
 // ticks.x
 // ticks.y
 
-// var ticks = xyScale.ticks([100], [200]) will return ticks with the interval equal to 100 on x scale, and with interval equal 200 on y scale
-// ticks.x
-// ticks.y
+// var yTicks = xyScale.y.ticks([100]) will return ticks with the interval equal to 100 on y scale
 
 d3.scale.cartesian = function() {
     return d3_cartesian_scale(
@@ -149,6 +146,65 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         }
     }
 
+    function ticks(primarySpaces, secondarySpaces) {
+        return function(ticksSpec) {
+            ticksSpec = ticksSpec || 10;
+
+            function findExtremumTicks(ticksInterval, endPoints) {
+                return [
+                        endPoints[0] + (ticksInterval - endPoints[0] % ticksInterval) % ticksInterval,
+                        endPoints[1] - (ticksInterval + endPoints[1] % ticksInterval) % ticksInterval
+                ]
+            }
+
+            function findNearestRoundNumber(number) {
+                var pow_of_10 = 1;
+                while (number / pow_of_10 > 1) {
+                    pow_of_10 *= 10
+                }
+
+                var nearestRoundNumber = undefined;
+                var minDistance = undefined;
+
+                for (var i = 0; i < ticksRound.length; i++) {
+                    var roundNumber = ticksRound[i] * pow_of_10;
+                    var distance = Math.abs(roundNumber - number);
+                    if (nearestRoundNumber === undefined || distance < minDistance) {
+                        nearestRoundNumber = roundNumber;
+                        minDistance = distance;
+                    }
+                }
+                return nearestRoundNumber || number
+            }
+
+            function computeTicksInterval(ticksNumber, domain) {
+                var exactInterval = interval(domain) / ticksNumber;
+                return findNearestRoundNumber(exactInterval);
+            }
+
+            function generateTicks(ticksInterval, endPoints) {
+                var ticks = [];
+                for (var tick = endPoints[0]; tick <= endPoints[1]; tick += ticksInterval) {
+                    ticks.push(tick);
+                }
+                return ticks;
+            }
+
+            var ticksInterval = ticksSpec.length ? ticksSpec[0] : computeTicksInterval(ticksSpec, primarySpaces.correctedDomain);
+            if (primarySpaces && secondarySpaces) {
+                var xyTicks = [
+                    generateTicks(ticksInterval, findExtremumTicks(ticksInterval, primarySpaces.correctedDomain)),
+                    generateTicks(ticksInterval, findExtremumTicks(ticksInterval, secondarySpaces.correctedDomain))
+                ];
+                xyTicks.x = xyTicks[0];
+                xyTicks.y = xyTicks[1];
+                return xyTicks;
+            } else {
+                return generateTicks(ticksInterval, findExtremumTicks(ticksInterval, primarySpaces.correctedDomain));
+            }
+        }
+    }
+
     function combineXY(fx, fy, cx, cy) {
         return function(param) {
             if (fx.validator.call(undefined, param) && fy.validator.call(undefined, param)) {
@@ -181,6 +237,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     xScale.invert = inverter(xSpaces);
     xScale.padding = padding(xSpaces);
     xScale.tickFormat = tickFormat(xSpaces);
+    xScale.ticks = ticks(xSpaces);
 
     yScale.x = xScale;
     yScale.domain = domain(ySpaces);
@@ -189,6 +246,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     yScale.invert = inverter(ySpaces);
     yScale.padding = padding(ySpaces);
     yScale.tickFormat = tickFormat(ySpaces);
+    yScale.ticks = ticks(ySpaces);
 
     xyScale.x = xScale;
     xyScale.y = yScale;
@@ -208,60 +266,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         ticksRound = values.slice(0);
         return this;
     };
-    xyScale.ticks = function() {
-        arguments = arguments.length && arguments || [10];
-
-        function findExtremumTicks(ticksInterval, endPoints) {
-            return [
-                endPoints[0] + (ticksInterval - endPoints[0] % ticksInterval) % ticksInterval,
-                endPoints[1] - (ticksInterval + endPoints[1] % ticksInterval) % ticksInterval
-            ]
-        }
-
-        function findNearestRoundNumber(number) {
-            var pow_of_10 = 1;
-            while (number / pow_of_10 > 1) {
-                pow_of_10 *= 10
-            }
-
-            var nearestRoundNumber = undefined;
-            var minDistance = undefined;
-
-            for (var i = 0; i < ticksRound.length; i++) {
-                var roundNumber = ticksRound[i] * pow_of_10;
-                var distance = Math.abs(roundNumber - number);
-                if (nearestRoundNumber === undefined || distance < minDistance) {
-                    nearestRoundNumber = roundNumber;
-                    minDistance = distance;
-                }
-            }
-            return nearestRoundNumber || number
-        }
-
-        function computeTicksInterval(ticksNumber, domain) {
-            var exactInterval = interval(domain) / ticksNumber;
-            return findNearestRoundNumber(exactInterval);
-        }
-
-        function generateTicks(ticksInterval, endPoints) {
-            var ticks = [];
-            for (var tick = endPoints[0]; tick <= endPoints[1]; tick += ticksInterval) {
-                ticks.push(tick);
-            }
-            return ticks;
-        }
-
-        var xTicksSpec = arguments[0];
-        var yTicksSpec = arguments[1];
-
-        var xInterval = (xTicksSpec.length && xTicksSpec[0]) || computeTicksInterval(xTicksSpec, xSpaces.correctedDomain);
-        var yInterval = yTicksSpec && ((yTicksSpec.length && yTicksSpec[0]) || computeTicksInterval(yTicksSpec, ySpaces.correctedDomain));
-
-        return {
-            x : generateTicks(xInterval, findExtremumTicks(xInterval, xSpaces.correctedDomain)),
-            y : generateTicks(yInterval || xInterval, findExtremumTicks(yInterval || xInterval, ySpaces.correctedDomain))
-        }
-    };
+    xyScale.ticks = ticks(xSpaces, ySpaces);
     xyScale.copy = function() {
         return d3_cartesian_scale(
             { domain : xSpaces.domain.slice(0), range : xSpaces.range.slice(0), ticksRound : xSpaces.ticksRound.slice(0) },
