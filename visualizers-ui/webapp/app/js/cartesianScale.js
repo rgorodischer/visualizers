@@ -287,8 +287,17 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
     xyScale.ticks = ticks(xSpaces, ySpaces);
     xyScale.copy = function() {
         return d3_cartesian_scale(
-            { domain : xSpaces.domain.slice(0), range : xSpaces.range.slice(0), ticksRound : xSpaces.ticksRound.slice(0) },
-            { domain : ySpaces.domain.slice(0), range : ySpaces.range.slice(0), ticksRound : ySpaces.ticksRound.slice(0) }
+            {
+                domain : xSpaces.domain.slice(0),
+                range : xSpaces.range.slice(0),
+                padding : xSpaces.padding
+            },
+            {
+                domain : ySpaces.domain.slice(0),
+                range : ySpaces.range.slice(0),
+                padding : ySpaces.padding
+            },
+            ticksRound.slice(0)
         )
     };
 
