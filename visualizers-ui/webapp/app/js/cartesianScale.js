@@ -95,7 +95,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
             rescale();
             return this;
         };
-        domain.validator = function(d) { return d && d.length == 2 };
+        domain.validator = function(d) { return d && d.length == 2 && d instanceof Array};
         return domain;
     }
 
@@ -114,7 +114,7 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
             rescale();
             return this;
         };
-        range.validator = function(r) { return r && r.length == 2 };
+        range.validator = function(r) { return r && r.length == 2 && r instanceof Array};
         return range;
     }
 
@@ -198,6 +198,12 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
                 ];
                 xyTicks.x = xyTicks[0];
                 xyTicks.y = xyTicks[1];
+                xyTicks.map = function() {
+                    var result = Array.prototype.map.apply(xyTicks, arguments);
+                    result.x = result[0];
+                    result.y = result[1];
+                    return result;
+                };
                 return xyTicks;
             } else {
                 return generateTicks(ticksInterval, findExtremumTicks(ticksInterval, primarySpaces.correctedDomain));
@@ -260,11 +266,23 @@ function d3_cartesian_scale(xSpaces, ySpaces, ticksRound) {
         }
     };
     xyScale.ticksRound = function(values) {
-        if (!arguments.length || !values.length) {
+        if (!arguments.length || !values.length || !(values instanceof Array)) {
             return ticksRound.slice(0)
         }
         ticksRound = values.slice(0);
         return this;
+    };
+    xyScale.tickFormat = function(count, format){
+        var formatter = xyScale.x.tickFormat(count, format);
+        return function(t) {
+            if (t && t.length && t instanceof Array) {
+                return t.map(formatter)
+            } else if (typeof t === 'number'){
+                return formatter(t)
+            } else {
+                return t
+            }
+        }
     };
     xyScale.ticks = ticks(xSpaces, ySpaces);
     xyScale.copy = function() {
