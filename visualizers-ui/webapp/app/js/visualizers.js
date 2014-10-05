@@ -25,6 +25,7 @@ function BaseVisualizer(container, problem) {
         var boundariesContainer = gridContainer.append('g');
 
         var ticks = this.scale.ticks();
+        console.log(ticks);
 
         horizontalLinesContainer.selectAll("hline")
             .data(ticks.y)
@@ -138,6 +139,37 @@ TspVisualizer.prototype.calculateDomains = function() {
 
 function VrpVisualizer(container, vrpProblem) {
     BaseVisualizer.call(this, container, vrpProblem);
+
+    this.visualizeProblem = function() {
+        var problemContainer = this.canvas.append('g');
+
+        var cs = this.problem.customers;
+        var minDemand = cs.foldLeft(cs[0].demand)(function(acc, cur) {
+            return Math.min(acc, cur.demand);
+        });
+
+        var radiusByDemand = function(demand) {
+            return Math.round(Math.log(demand / minDemand) / Math.LN10) + 1
+        };
+
+        var scale = this.scale;
+        problemContainer.selectAll("circle")
+            .data(cs)
+            .enter().append("circle")
+            .attr("class", "point")
+            .attr("data-id", function(p) {
+                return p.id
+            })
+            .attr("r", function(p) {
+                return Math.max(2, radiusByDemand(p.demand))
+            })
+            .attr("cx", function(p) {
+                return scale.x(p.x)
+            })
+            .attr("cy", function(p) {
+                return scale.y(p.y)
+            });
+    }
 }
 
 VrpVisualizer.prototype = Object.create(BaseVisualizer.prototype);
