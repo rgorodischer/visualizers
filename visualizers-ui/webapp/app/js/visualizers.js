@@ -18,17 +18,15 @@ function BaseVisualizer(container, problem) {
     };
 
     this.drawGrid = function() {
-
-
         var gridContainer = this.canvas.append('g');
 
         var horizontalLinesContainer = gridContainer.append('g');
         var verticalLinesContainer = gridContainer.append('g');
+        var boundariesContainer = gridContainer.append('g');
 
         var ticks = this.scale.ticks();
-        console.log(ticks);
 
-        horizontalLinesContainer.selectAll("line")
+        horizontalLinesContainer.selectAll("hline")
             .data(ticks.y)
             .enter().append("line")
             .attr("x1", 0)
@@ -37,11 +35,29 @@ function BaseVisualizer(container, problem) {
             .attr("y2", this.scale.y)
             .style("stroke", "#0000ff");
 
-        verticalLinesContainer.selectAll("line")
+        verticalLinesContainer.selectAll("vline")
             .data(ticks.x)
             .enter().append("line")
             .attr("x1", this.scale.x)
             .attr("x2", this.scale.x)
+            .attr("y1", 0)
+            .attr("y2", this.container.height())
+            .style("stroke", "#0000ff");
+
+        boundariesContainer.selectAll("hline")
+            .data([0, this.container.height()])
+            .enter().append("line")
+            .attr("x1", 0)
+            .attr("x2", this.container.width())
+            .attr("y1", function(p) { return p })
+            .attr("y2", function(p) { return p })
+            .style("stroke", "#0000ff");
+
+        boundariesContainer.selectAll("vline")
+            .data([0, this.container.width()])
+            .enter().append("line")
+            .attr("x1", function(p) { return p })
+            .attr("x2", function(p) { return p })
             .attr("y1", 0)
             .attr("y2", this.container.height())
             .style("stroke", "#0000ff");
@@ -70,7 +86,7 @@ function BaseVisualizer(container, problem) {
 
 BaseVisualizer.configCartesianScale = function(width, height, xDomain, yDomain) {
     var cartesianScale = d3.scale.cartesian();
-    cartesianScale.ticksRound([0.1, 0.125, 0.2, 0.25, 0.4, 0.5, 0.75, 1]).padding('10%').
+    cartesianScale.ticksRound([0.1, 0.125, 0.2, 0.25, 0.4, 0.5, 0.75, 1]).padding('8%').
         x.range([0, width]).domain(xDomain).
         y.range([0, height]).domain(yDomain);
     return cartesianScale
@@ -91,6 +107,26 @@ BaseVisualizer.calculateDomains = function(points) {
 
 function TspVisualizer(container, tspProblem) {
     BaseVisualizer.call(this, container, tspProblem);
+
+    this.visualizeProblem = function() {
+        var problemContainer = this.canvas.append('g');
+
+        var scale = this.scale;
+        problemContainer.selectAll("circle")
+            .data(this.problem)
+            .enter().append("circle")
+            .attr("class", "point")
+            .attr("data-id", function(p) {
+                return p.id
+            })
+            .attr("r", 2)
+            .attr("cx", function(p) {
+                return scale.x(p.x)
+            })
+            .attr("cy", function(p) {
+                return scale.y(p.y)
+            });
+    }
 }
 
 TspVisualizer.prototype = Object.create(BaseVisualizer.prototype);

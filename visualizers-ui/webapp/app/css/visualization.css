@@ -1,7 +1,9 @@
 #visualization-container {
     height: 520px; /* todo: should be specified separately for different media */
     max-height: 520px;
-    background: #eee;
+    background: #fafafa;
+    padding: 40px 0 0 60px;
+    margin-bottom: 20px;
 }
 
 svg.visualizer {

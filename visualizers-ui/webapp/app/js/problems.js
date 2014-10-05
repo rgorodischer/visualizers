@@ -76,6 +76,7 @@ angular.module("problemSets", ["ngRoute"])
 
                         visualizer.prepareCanvas();
                         visualizer.drawGrid();
+                        visualizer.visualizeProblem();
                     }
                 });
 
