@@ -1,231 +1,93 @@
 
-function _visualizeTSPSituation(data) {
-    var xCoordinates = $.map(data, function(point) {
-        return point.x
-    });
-    var yCoordinates = $.map(data, function(point) {
-        return point.y
-    });
-    var xMin = d3.min(xCoordinates);
-    var xMax = d3.max(xCoordinates);
-    var xRange = new Range(xMin, xMax);
-
-    var yMin = d3.min(yCoordinates);
-    var yMax = d3.max(yCoordinates);
-    var yRange = new Range(yMin, yMax);
-
-    var yMaxChars = d3.max([yMin.toString().length, yMax.toString().length]);
-    var xLabelsOffset = 50 + (yMaxChars > 3 ? (yMaxChars - 3) * 7 : 0);
-
-    var xMaxChars = xMax.toString().length;
-    var xRightPadding = (xMaxChars > 3) ? (xMaxChars - 3) * 5 : 0;
-
-    var visualizer = new Visualizer({"horizontalLinesCount": 6, "xLabelsOffset": xLabelsOffset, "xRightPadding": xRightPadding});
-    visualizer.showGrid(xRange, yRange);
-    visualizer.visualizeProblem(data);
-    visualizer.showSubmitForm();
-}
-
-
-//--------in constructor-------------
-//0. clean up                              (done)
-//1. calculate necessary height/width      (done)
-//2. calculate pretty height/width         (done)
-//3. make mapper function
-//------in render functions-----------
-//4. calculate grid cell size
-//5. generate grid lines
-//6. draw lines through the mapper
-//7. draw points through the mapper
 function BaseVisualizer(container, problem) {
     this.container = container;
     this.problem = problem;
-    this.reset();
+    this.domains = this.calculateDomains();
+    this.scale = BaseVisualizer.configCartesianScale(
+        this.container.width(), this.container.height(),
+        this.domains.x, this.domains.y
+    );
 
-    this.problemBoundaries = this.calculateProblemBoundaries();
-    this.adjustedBoundaries = this._adjustBoundariesToContainerShape(this.problemBoundaries);
+    this.prepareCanvas = function() {
+        this.container.find('svg').remove();
+
+        this.canvas = d3.select(this.container[0]).append('svg')
+            .attr("class", "visualization")
+            .attr("width", this.container.width())
+            .attr("height", this.container.height())
+    };
+
+    this.drawGrid = function() {
+
+
+        var gridContainer = this.canvas.append('g');
+
+        var horizontalLinesContainer = gridContainer.append('g');
+        var verticalLinesContainer = gridContainer.append('g');
+
+        var ticks = this.scale.ticks();
+        console.log(ticks);
+
+        horizontalLinesContainer.selectAll("line")
+            .data(ticks.y)
+            .enter().append("line")
+            .attr("x1", 0)
+            .attr("x2", this.container.width())
+            .attr("y1", this.scale.y)
+            .attr("y2", this.scale.y)
+            .style("stroke", "#0000ff");
+
+        verticalLinesContainer.selectAll("line")
+            .data(ticks.x)
+            .enter().append("line")
+            .attr("x1", this.scale.x)
+            .attr("x2", this.scale.x)
+            .attr("y1", 0)
+            .attr("y2", this.container.height())
+            .style("stroke", "#0000ff");
+    };
+
+    this.drawLegend = function() {
+        var xLegendContainer = this.canvas.append('g')
+            .attr('transform', 'translate(-15, 6)');
+
+        xLegendContainer.selectAll(".gridLabels")
+            .data(yScale.ticks(this.horizontalLinesCount))
+            .enter().append("text")
+            .attr("class", "gridLabels")
+            .attr("x", 0)
+            .attr("y", yScale)
+            .attr("text-anchor", "end")
+            .text(String);
+
+
+    };
 }
 
-BaseVisualizer.prototype.reset = function() {
-    this.container.find('svg').remove();
+//********************
+//* static functions *
+//********************
 
-    this.canvas = d3.select(this.container[0]).append('svg')
-        .attr("class", "visualization")
-        .attr("width", this.container.width())
-        .attr("height", this.container.height())
+BaseVisualizer.configCartesianScale = function(width, height, xDomain, yDomain) {
+    var cartesianScale = d3.scale.cartesian();
+    cartesianScale.ticksRound([0.1, 0.125, 0.2, 0.25, 0.4, 0.5, 0.75, 1]).padding('10%').
+        x.range([0, width]).domain(xDomain).
+        y.range([0, height]).domain(yDomain);
+    return cartesianScale
 };
 
-BaseVisualizer.prototype._adjustBoundaries = function(points, problemBoundaries) {
-    angular.forEach(points, function(value) {
-        if (problemBoundaries.minX === undefined || problemBoundaries.minX > value.x) {
-            problemBoundaries.minX = value.x
-        }
-        if (problemBoundaries.maxX === undefined || problemBoundaries.maxX < value.x) {
-            problemBoundaries.maxX = value.x
-        }
-        if (problemBoundaries.minY === undefined || problemBoundaries.minY > value.y) {
-            problemBoundaries.minY = value.y
-        }
-        if (problemBoundaries.maxY === undefined || problemBoundaries.maxY < value.y) {
-            problemBoundaries.maxY = value.y
-        }
-    });
-    return problemBoundaries;
-};
-
-BaseVisualizer.prototype._adjustBoundariesToContainerShape = function(boundaries) {
-    var containerSidesRatio = this.container.width() / this.container.height();
-
-    var regionWidth = boundaries.maxX - boundaries.minX;
-    var regionHeight = boundaries.maxY - boundaries.minY;
-    var regionSidesRatio = regionWidth / regionHeight;
-
-    var adjustedBoundaries = angular.copy(boundaries);
-    if (containerSidesRatio > regionSidesRatio) {
-        var adjustedWidth = regionHeight * containerSidesRatio;
-        var widthAdjustmentComponent = (adjustedWidth - regionWidth) / 2;
-        adjustedBoundaries.minX -= widthAdjustmentComponent;
-        adjustedBoundaries.maxX += widthAdjustmentComponent;
-    } else if (regionSidesRatio > containerSidesRatio) {
-        var adjustedHeight = regionWidth / containerSidesRatio;
-        var heightAdjustmentComponent = (adjustedHeight - regionHeight) / 2;
-        adjustedBoundaries.minY -= heightAdjustmentComponent;
-        adjustedBoundaries.maxY += heightAdjustmentComponent;
-    }
-    return adjustedBoundaries
-};
-
-//Ensures visualization has padding.
-//Padding is specified as a string parameter.
-//There are two acceptable formats of padding:
-// - with 'px'-suffix, e.g. ensurePadding('10px')
-// - with '%'-suffix, e.g. ensurePadding('5%')
-BaseVisualizer.prototype.ensurePadding = function(padding) {
-    if (typeof padding !== 'string') {
-        throw new TypeError("String value is expected as 'padding' argument.")
-    }
-    var paddingFormat = /(\d+)(px|%)/;
-    var analysedPadding = padding.match(paddingFormat);
-    if (analysedPadding) {
-        var units = parseInt(analysedPadding[1], 10);
-        var unitType = analysedPadding[2];
-
-        var region = this.adjustedBoundaries;
-
-        var horizontalPaddingPx = unitType === 'px'
-            ? units
-            : (region.maxX - region.minX) * (units / 100.0);
-
-        var verticalPaddingPx = unitType === 'px'
-            ? units
-            : (region.maxY - region.minY) * (units / 100.0);
-
-        region.minX = Math.min(region.minX, this.problemBoundaries.minX - horizontalPaddingPx);
-        region.maxX = Math.max(region.maxX, this.problemBoundaries.maxX + horizontalPaddingPx);
-
-        region.minY = Math.min(region.minY, this.problemBoundaries.minY - verticalPaddingPx);
-        region.maxY = Math.max(region.maxY, this.problemBoundaries.maxY + verticalPaddingPx);
-
-        this.adjustedBoundaries = this._adjustBoundariesToContainerShape(region);
-
-    } else {
-        throw new Error("Padding argument doesn't match expected format.")
+BaseVisualizer.calculateDomains = function(points) {
+    return {
+        x : points.foldLeft([0, 0])(function(acc, cur) {
+            acc[0] = Math.min(acc[0], cur.x);
+            acc[1] = Math.max(acc[1], cur.x);
+        }),
+        y : points.foldLeft([0, 0])(function(acc, cur) {
+            acc[0] = Math.min(acc[0], cur.y);
+            acc[1] = Math.max(acc[1], cur.y);
+        })
     }
 };
-
-BaseVisualizer.prototype.drawGrid = function(desiredSquaresNumber) {
-
-    function findMarginalDivisiblePoints(side, minCoordinate, maxCoordinate) {
-        return [
-            minCoordinate + (side - minCoordinate % side) % side,
-            maxCoordinate - (side + maxCoordinate % side) % side
-        ]
-    }
-
-    function findOptimalSquareSide(boundaries) {
-
-        function findNearestPrettyNumber(number) {
-            var niceBases = [0.1, 0.125, 0.15, 0.2, 0.25, 0.4, 0.5, 0.75, 1];
-
-            var multiplier = 1;
-            while (number / multiplier > 1) {
-                multiplier *= 10
-            }
-
-            var nearestPrettyNumber = -1;
-            var smallestError = -1;
-
-            for (var i = 0; i < niceBases.length; i++) {
-                var prettyNumber = niceBases[i] * multiplier;
-                var error = Math.abs(prettyNumber - number);
-                if (nearestPrettyNumber == -1 || error < smallestError) {
-                    nearestPrettyNumber = prettyNumber;
-                    smallestError = error;
-                }
-            }
-            return nearestPrettyNumber
-        }
-
-        function compareRatios(r1, r2) {
-            for (var i = 0; i < r1.length; i++) {
-                if (r1[i] < r2[i]) return -1;
-                if (r1[i] > r2[i]) return 1;
-            }
-            return 0;
-        }
-
-        var optimalSide = -1;
-        var smallestLineFromBorderToSideRatios = [];  //want to maximize the smallest of these
-
-        var regionWidth = (boundaries.maxX - boundaries.minX);
-        var regionHeight = (boundaries.maxY - boundaries.minY);
-        for (var squaresNumber = desiredSquaresNumber.min; squaresNumber <= desiredSquaresNumber.max; squaresNumber++) {
-            var exactSide = regionWidth / squaresNumber;
-            var prettySide = findNearestPrettyNumber(exactSide);
-
-            if (regionHeight / prettySide < desiredSquaresNumber.min || regionWidth / prettySide > desiredSquaresNumber.max) {
-                continue
-            }
-
-            var horizontalMarginalPoints = findMarginalDivisiblePoints(prettySide, boundaries.minX, boundaries.maxX);
-            var verticalMarginalPoints = findMarginalDivisiblePoints(prettySide, boundaries.minY, boundaries.maxY);
-
-            var ratios = [
-                (horizontalMarginalPoints[0] - boundaries.minX) / prettySide,
-                (boundaries.maxX - horizontalMarginalPoints[1]) / prettySide,
-                (verticalMarginalPoints[0] - boundaries.minY)  / prettySide,
-                (boundaries.maxY - verticalMarginalPoints[1]) / prettySide
-            ];
-            ratios.sort();
-            if (optimalSide == -1 || compareRatios(ratios, smallestLineFromBorderToSideRatios) == 1) {
-                optimalSide = prettySide;
-                smallestLineFromBorderToSideRatios = ratios;
-            }
-        }
-        return optimalSide
-    }
-
-    function generateLines(startPoint, endPoint, step) {
-        var lines = [];
-        for (var line = startPoint; line <= endPoint; line += step) {
-            lines.push(line);
-        }
-        return lines;
-    }
-
-    var boundaries = this.adjustedBoundaries;
-    var squareSide = findOptimalSquareSide(boundaries);
-
-    var marginalVerticalLines = findMarginalDivisiblePoints(squareSide, boundaries.minX, boundaries.maxX);
-    var verticalLines = generateLines(marginalVerticalLines[0], marginalVerticalLines[1], squareSide);
-
-    var marginalHorizontalLines = findMarginalDivisiblePoints(squareSide, boundaries.minY, boundaries.maxY);
-    var horizontalLines = generateLines(marginalHorizontalLines[0], marginalHorizontalLines[1], squareSide);
-
-    console.log(JSON.stringify(verticalLines));
-    console.log(JSON.stringify(horizontalLines));
-};
-
 
 function TspVisualizer(container, tspProblem) {
     BaseVisualizer.call(this, container, tspProblem);
@@ -233,9 +95,10 @@ function TspVisualizer(container, tspProblem) {
 
 TspVisualizer.prototype = Object.create(BaseVisualizer.prototype);
 
-TspVisualizer.prototype.calculateProblemBoundaries = function() {
-    return this._adjustBoundaries(this.problem, {});
+TspVisualizer.prototype.calculateDomains = function() {
+    return BaseVisualizer.calculateDomains(this.problem);
 };
+
 
 function VrpVisualizer(container, vrpProblem) {
     BaseVisualizer.call(this, container, vrpProblem);
@@ -243,11 +106,8 @@ function VrpVisualizer(container, vrpProblem) {
 
 VrpVisualizer.prototype = Object.create(BaseVisualizer.prototype);
 
-VrpVisualizer.prototype.calculateProblemBoundaries = function() {
-    var boundaries = {};
-    this._adjustBoundaries(this.problem.customers, boundaries);
-    this._adjustBoundaries([this.problem.warehouse], boundaries);
-    return boundaries;
+VrpVisualizer.prototype.calculateDomains = function() {
+    return BaseVisualizer.calculateDomains(this.problem.customers.concat(this.problem.warehouse))
 };
 
 function Visualizer(config) {

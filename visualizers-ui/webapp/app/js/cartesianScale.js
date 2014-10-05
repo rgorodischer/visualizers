@@ -1,7 +1,7 @@
-// var xyScale = d3.scale.cartesian()
-//    .ticksRound([0.1, 0.2, 0.3, 0.5, 1])
-//    .x.domain([x1, x2]).range([rx1, rx2]).padding(30)
-//    .y.domain([y1, y2]).range([ry1, ry2]).padding('5%')
+// var xyScale = d3.scale.cartesian();
+// xyScale.ticksRound([0.1, 0.2, 0.3, 0.5, 1])
+//   .x.domain([x1, x2]).range([rx1, rx2]).padding(30)
+//   .y.domain([y1, y2]).range([ry1, ry2]).padding('5%')
 //
 // var p = { x: v1, y: v2 }
 // xyScale.x(p.x) === val
